@@ -246,7 +246,11 @@
     },
     { 
       title: '岗位', dataIndex: 'post_ids', width: 120, formType: 'select', multiple: true,
-      dict: { url: 'system/post/list', props: { label: 'name', value: 'id' } }, hide: true,
+      dict: {
+        url: 'system/post/list',
+        props: { label: 'name', value: 'id' }
+      },
+      hide: true,
       editDefaultValue: async (record) => {
         const response = await user.read(record.id)
         const ids = response.data.postList.map(item => item.id )
