@@ -75,7 +75,12 @@ const createChartOptionsPie = () => {
 watch(
     () => props.sequence,
     () => {
-      createChartOptionsPie()
+
+      if (props.sequence.length){
+        createChartOptionsPie()
+      }
+
+      console.log('ma-charts-waiting-sequence-pie/index.vue watch props.sequence', props.sequence)
     },
     { immediate: true, deep: true }
 )

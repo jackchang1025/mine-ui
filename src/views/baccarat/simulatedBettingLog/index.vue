@@ -3,22 +3,30 @@
   <a-layout style="height: 100%;">
     <a-layout-header>
 
-
-
     </a-layout-header>
 
     <a-layout>
       <a-layout-sider style="width: 15%;">
 
-        <a-select
-            @change="bettingHandleSelect"
-            v-model="bettingHandleSelectValue"
-            :style="{width:'150'}"
-            placeholder="Please select ..."
-            allow-clear
-        >
-          <a-option v-for="(item, index) in bettingHandleSelectList" :key="index" :value="item.id" :label="item.title" />
-        </a-select>
+        <a-space direction="vertical" :size="16" style="display: block;">
+
+          <a-select
+              @change="bettingHandleSelect"
+              v-model="bettingHandleSelectValue"
+              :style="{width:'150'}"
+              placeholder="Please select ..."
+              allow-clear
+          >
+            <a-option v-for="(item, index) in bettingHandleSelectList" :key="index" :value="item.id" :label="item.title" />
+          </a-select>
+
+<!--          表单-->
+          <a-row class="grid-demo">
+            <a-col :span="24">
+              <ma-form v-model="form" :columns="columnsOptions" ref="crudForm" @submit="handleFormSubmit"/>
+            </a-col>
+          </a-row>
+        </a-space>
 
       </a-layout-sider>
       <a-layout-sider style="width: 15%;">
@@ -45,18 +53,6 @@
       <a-layout-content>
         <div class="ma-content-block lg:flex justify-between p-4">
 
-
-
-          <!--<div class="lg:w-2/12 w-full h-full p-2 shadow">-->
-          <!--  <ma-tree-slider-->
-          <!--      :data="baccaratBettingRuleLogDate"-->
-          <!--      searchPlaceholder="投注规则"-->
-          <!--      v-model="bettingRuleLogDefaultKey"-->
-          <!--      @click="switchBettingRuleLog"-->
-          <!--  />-->
-          <!--</div>-->
-
-
           <!-- CRUD 组件 -->
           <ma-crud :options="options" :columns="columns" ref="crudRef">
           </ma-crud>
@@ -71,8 +67,16 @@
         <ma-scatter v-if="baccaratTerraceDeckData" :baccaratTerraceDeck="baccaratTerraceDeckData"></ma-scatter>
       </div>
 
-      <div style="margin:50px;height: 400px;">
+      <div style="margin-top:50px;height: 400px;">
         <a-textarea placeholder="Please enter something" v-model="baccaratBettingSequence" allow-clear/>
+      </div>
+
+      <div style="height: 100%;width: 100%">
+
+        <ma-chart-waiting-sequence-pie :sequence="sequence" v-if="sequence.length" :autoresize="true" :width="'100%'" :height="'100px'"/>
+
+        <ma-chart-waiting-strategy :betLogList="betLogList" v-if="betLogList" :autoresize="true" :width="'100%'" :height="'2500px'" />
+
       </div>
     </a-layout-footer>
   </a-layout>
@@ -80,7 +84,7 @@
 
 </template>
 <script setup>
-import { ref, reactive,onMounted,computed} from 'vue'
+import {ref, reactive, onMounted, computed, watch} from 'vue'
 import baccaratBettingLog from '@/api/baccarat/simulatedBettingLog.js'
 import baccaratTerrace from '@/api/baccarat/baccaratTerrace.js'
 import baccaratTerraceDeck from '@/api/baccarat/baccaratTerraceDeck.js'
@@ -92,40 +96,124 @@ import tool from '@/utils/tool'
 import * as common from '@/utils/common'
 import MaTreeSlider from '@cps/ma-treeSlider/index.vue'
 import commonApi from "@/api/common.js";
+import MaFormModal from "@cps/ma-form-modal/index.vue";
 
 
 const crudRef = ref()
-const baccaratTerraceDate = ref([]);
+const baccaratTerraceDate = ref([]);//牌靴列表
 const terraceDeckDefaultKey = ref([])
-const bettingHandleSelectList = ref([])
-const bettingHandleSelectValue = ref(null)
-const terrace_deck_created_at = ref('')
+const bettingHandleSelectList = ref([])//投注单列表
+const bettingHandleSelectValue = ref(null)//当前选择的投注单号
+const terrace_deck_created_at = ref(null)//当前选择的时间
 const baccaratTerraceDeckSelectValue = ref({})
+
+const betLogList = ref({});//投注记录charts
+const sequence = ref('');//牌靴序列
+
+// form 组件的 ref
+const crudForm = ref()
+// 表单数据
+const form = ref({ betTotalAmount: 2000, betDefaultAmount: 20 })
+// 组件的字段设置
+const columnsOptions = reactive([
+  {
+    title: '总金额',
+    dataIndex: 'betTotalAmount',
+    formType: 'input',  // 默认为 input 组件
+    rules:[{required:true,message:'name is required'},{type:'number'}],
+  },
+  {
+    title: '默认金额',
+    dataIndex: 'betDefaultAmount',
+    formType: 'input',  // 使用单选框组件
+    rules:[{required:true,message:'name is required'},{type:'number', min:20,message:'age is min than 20'}],
+  }
+])
+
 
 /**
  * 牌靴数据
  */
 const baccaratTerraceDeckData = ref(null)
 
-const baccaratBettingSequence = computed(() => {
+const baccaratBettingSequence = ref(null)
 
-  if (baccaratTerraceDate.value?.length) {
-    return baccaratTerraceDate.value
-        .filter(item => item?.children?.length)
-        .flatMap(item => item.children.map(child => child.baccaratBettingSequence))
-        .join('');
+const handleFormSubmit = async (formData,done) =>{
+// 显示表单提交中状态
+  done(true)
+
+  console.log("form",form.value)
+
+  await getBetLogListChart();
+
+  // 关闭表单提交中状态
+  done(false)
+  Message.success('操作成功')
+
+}
+
+/**
+ * 获取投注记录charts
+ * @returns {Promise<void>}
+ */
+const getBetLogListChart = async ()=>{
+
+  console.log("getBetLogListChart")
+
+  if (bettingHandleSelectValue.value === null){
+    Message.error({
+      content: '投注单不能为空',
+    })
+    return
   }
 
-  return '';
+  if (terrace_deck_created_at.value === null){
+     Message.error({
+      content: '时间不能为空',
+    })
+    return
+  }
+  if (form.value.betTotalAmount <= form.value.betDefaultAmount){
+    Message.error({
+      content: '投注总金额不能小于默认金额',
+    })
+    return ;
+  }
 
-});
+  if (form.value.betDefaultAmount < 20){
+    Message.error({
+      content: '默认金额不能小于 20 ',
+    })
+    return ;
+  }
+
+  const response = await baccaratBettingLog.chart({
+    betting_id: bettingHandleSelectValue.value,
+    date:terrace_deck_created_at.value,
+    betTotalAmount: form.value.betTotalAmount,
+    betDefaultAmount: form.value.betDefaultAmount,
+  })
+
+  console.log("getBetLogListChart response",response)
+
+  if (response.data?.betLogList){
+
+    betLogList.value = response.data.betLogList;
+  }
+
+  if (response.data?.sequence.length){
+
+    sequence.value = response.data.sequence;
+  }
+
+  baccaratBettingSequence.value = response.data?.sequence
+}
 
 /**
  * 投注规则选择
  * @param value
  */
 const bettingHandleSelect = (value)=>{
-
 
   getListWithTerraceDeck({terrace_deck_created_at:terrace_deck_created_at.value,betting_id:bettingHandleSelectValue.value})
 }
@@ -149,8 +237,38 @@ const dateOnChange = (value,date, dateString)=> {
 
   terrace_deck_created_at.value = value
   //设置牌靴的时间
+
   getListWithTerraceDeck({terrace_deck_created_at:value,betting_id:bettingHandleSelectValue.value})
+
+  //获取图表数据
+  getBetLogListChart();
 }
+
+//监听 terrace_deck_created_at 和 bettingHandleSelectValue 改变时，重新获取牌靴列表
+// watch(
+//     () => terrace_deck_created_at.value,
+//     () => {
+//
+//
+//
+//
+//
+//       console.log(' watch terrace_deck_created_at.value', terrace_deck_created_at.value)
+//     },
+//     { immediate: true, deep: true }
+// )
+
+// watch(
+//     () => bettingHandleSelectValue.value,
+//     () => {
+//
+//       //获取图表数据
+//       getBetLogListChart();
+//
+//       console.log(' watch bettingHandleSelectValue.value', bettingHandleSelectValue.value)
+//     },
+//     { immediate: true, deep: true }
+// )
 
 /**
  * 牌靴切换
@@ -189,7 +307,7 @@ const getBaccaratTerraceDeckListWithBettingLog = (id)=>{
   baccaratTerraceDeckData.value = null;
   baccaratTerraceDeck.show(id).then(response =>{
     baccaratTerraceDeckData.value = response.data
-    console.log(response.data)
+    console.log('getBaccaratTerraceDeckListWithBettingLog',response.data)
   })
 }
 
@@ -283,7 +401,7 @@ const columns = reactive([
     formType: "input",
     addDisplay: false,
     editDisplay: false,
-    hide: true,
+    hide: false,
     commonRules: {
       required: true,
       message: "请输入主键"

@@ -19,6 +19,18 @@ export default {
   },
 
   /**
+   * 获取规则分页列表
+   * @returns
+   */
+  list (params = {}) {
+    return request({
+      url: 'baccarat/rule/list',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
    * 添加规则
    * @returns
    */

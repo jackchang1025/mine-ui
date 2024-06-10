@@ -135,7 +135,7 @@ function stringify (data) {
         config.headers
       ),
 
-      timeout: 60000,
+      timeout: 600000,
       data: {}
     }
 

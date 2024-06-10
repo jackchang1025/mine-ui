@@ -35,7 +35,7 @@
 
         <ma-chart-waiting-sequence-pie :sequence="sequence" v-if="sequence.length" :autoresize="true" :width="'100%'" :height="'100px'"/>
 
-        <ma-chart-waiting-strategy :betLogList="betLogList" v-if="betLogList" :autoresize="true" :width="'100%'" :height="'1200px'" />
+        <ma-chart-waiting-strategy :betLogList="betLogList" v-if="betLogList" :autoresize="true" :width="'100%'" :height="'25000px'" />
 
       </div>
 
@@ -226,7 +226,7 @@ const columns = reactive([
   {
     title: "序列",
     dataIndex: "sequence",
-    formType: "input",
+    formType: "textarea",
     search: true,
     commonRules: {
       required: true,

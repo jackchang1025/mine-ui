@@ -52,14 +52,17 @@ const  createChartOptions = () => {
       const betAmount = params.data?.bet_amount
       const totalAmount = params.data?.total_amount
       const issue = params.data?.issue
-      const sequence = params.data?.sequence
+      const betting_result = params.data?.betting_result
+      const created_at = params.data?.created_at
 
       return `
 strategyName: ${strategyName}<br/>
-sequence: ${sequence}<br/>
+bettingResult: ${betting_result}<br/>
 betAmount: ${betAmount}<br/>
 totalAmount: ${totalAmount}<br/>
-issue: ${issue}`
+issue: ${issue}<br/>
+created_at: ${created_at}<br/>
+`
     }
   }
 
@@ -81,86 +84,129 @@ issue: ${issue}`
       height: gridHeight
     })
 
-    chartOptions.value.xAxis.push({
-      type: 'category',
-      gridIndex: gridIndex,
-      name: '期号',
-      nameLocation: 'middle',
-      boundaryGap: true,
-      axisTick: {
-        show: true,
-        alignWithLabel: true,
-        interval: 0
-      }
-    })
-
-    chartOptions.value.yAxis.push({
-      type: 'value',
-      gridIndex: gridIndex,
-      name: '金额',
-      axisLabel: {
-        formatter: '{value} 元'
-      },
-      scale: true
-    })
-
     chartOptions.value.dataset.push({
       source: props.betLogList[strategyName]
     })
 
-    chartOptions.value.series.push({
-      name: `${strategyName} Sequence`,
-      type: 'line',
-      symbolSize: symbolSize,
-      xAxisIndex: xAxisIndex,
-      yAxisIndex: yAxisIndex,
-      encode: {
-        x: 'issue',
-        y: 'sequence',
-        tooltip: ['issue', 'sequence', 'bet_amount', 'total_amount']
-      },
-      itemStyle: {
-        color: 'green'
-      },
-      markLine: {
-        data: [
-          {
-            name: '连续输赢分界线',
-            yAxis: 0.5
-          }
-        ]
-      }
-    })
 
-    chartOptions.value.series.push({
-      name: `${strategyName} bet_amount`,
-      type: 'line',
-      symbolSize: symbolSize,
-      xAxisIndex: xAxisIndex,
-      yAxisIndex: yAxisIndex,
-      datasetIndex: index,
-      encode: {
-        x: 'issue',
-        y: 'bet_amount',
-        tooltip: ['issue', 'sequence', 'bet_amount', 'total_amount']
-      },
-      itemStyle: {
-        color: '#c75562'
-      }
-    })
+    if (index === 0){
 
-    chartOptions.value.series.push({
-      name: `${strategyName} total_amount`,
-      type: 'bar',
-      xAxisIndex: xAxisIndex,
-      yAxisIndex: yAxisIndex,
-      datasetIndex: index,
-      encode: {
-        x: 'issue',
-        y: 'total_amount',
-        tooltip: ['issue', 'sequence', 'bet_amount', 'total_amount']
-      }
-    })
+      let continuousWinCount = 0
+      let continuousLoseCount = 0
+
+      props.betLogList[strategyName].forEach((item, index) => {
+        if (item.betting_result === '1') {
+          continuousWinCount++
+          continuousLoseCount = 0
+        } else {
+          continuousLoseCount++
+          continuousWinCount = 0
+        }
+
+      })
+
+      chartOptions.value.xAxis.push({
+        type: 'category',
+        gridIndex: gridIndex,
+        name: strategyName,
+        nameLocation: 'middle',
+        boundaryGap: true,
+        data: props.betLogList[strategyName].map(item => item.issue), // 使用issue作为x轴的类目数据
+        axisTick: {
+          show: true,
+          alignWithLabel: true,
+          interval: 0
+        }
+      })
+
+      chartOptions.value.yAxis.push({
+        type: 'value',
+        gridIndex: gridIndex,
+        name: 'Continuous Count',
+        scale: true
+      })
+
+
+      chartOptions.value.series.push({
+        name: 'Continuous Win',
+        type: 'bar',
+        stack: 'continuous',
+        xAxisIndex: xAxisIndex,
+        yAxisIndex: yAxisIndex,
+        data: props.betLogList[strategyName].map(item => item.betting_result === '1' ? continuousWinCount : '-'),
+        itemStyle: {
+          color: '#00da3c'
+        }
+      })
+
+      chartOptions.value.series.push({
+        name: 'Continuous Lose',
+        type: 'bar',
+        stack: 'continuous',
+        xAxisIndex: xAxisIndex,
+        yAxisIndex: yAxisIndex,
+        data: props.betLogList[strategyName].map(item => item.betting_result === '0' ? continuousLoseCount : '-'),
+        itemStyle: {
+          color: '#ec0000'
+        }
+      })
+
+    }else {
+
+      chartOptions.value.xAxis.push({
+        type: 'category',
+        gridIndex: gridIndex,
+        name: strategyName,
+        nameLocation: 'middle',
+        boundaryGap: true,
+        axisTick: {
+          show: true,
+          alignWithLabel: true,
+          interval: 0
+        }
+      })
+
+      chartOptions.value.yAxis.push({
+        type: 'value',
+        gridIndex: gridIndex,
+        name: '金额',
+        axisLabel: {
+          formatter: '{value} 元'
+        },
+        scale: true
+      })
+
+      chartOptions.value.series.push({
+        name: `${strategyName} bet_amount`,
+        type: 'line',
+        symbolSize: symbolSize,
+        xAxisIndex: xAxisIndex,
+        yAxisIndex: yAxisIndex,
+        datasetIndex: index,
+        encode: {
+          x: 'issue',
+          y: 'bet_amount',
+          tooltip: ['issue', 'sequence', 'bet_amount', 'total_amount']
+        },
+        itemStyle: {
+          color: '#c75562'
+        }
+      })
+
+      chartOptions.value.series.push({
+        name: `${strategyName} total_amount`,
+        type: 'bar',
+        xAxisIndex: xAxisIndex,
+        yAxisIndex: yAxisIndex,
+        datasetIndex: index,
+        encode: {
+          x: 'issue',
+          y: 'total_amount',
+          tooltip: ['issue', 'sequence', 'bet_amount', 'total_amount']
+        }
+      })
+
+    }
 
     chartOptions.value.dataZoom = [
       {
@@ -176,6 +222,7 @@ issue: ${issue}`
         end: 100
       }
     ]
+
     index++
   }
 }
@@ -186,7 +233,7 @@ watch(
 
       createChartOptions()
 
-      console.log('chartOptions', chartOptions.value)
+      console.log('ma-charts-waiting-strategy/index.vue watch props.betLogList', props.betLogList)
     },
     { immediate: true, deep: true }
 )

@@ -7,7 +7,17 @@ import { request } from '@/utils/request.js'
 export default {
 
 
-
+  /**
+   * 获取投注分页列表
+   * @returns
+   */
+  chart (params = {}) {
+    return request({
+      url: 'baccarat/simulatedBettingLog/chart',
+      method: 'get',
+      params
+    })
+  },
 
   /**
    * 获取投注日志表分页列表
