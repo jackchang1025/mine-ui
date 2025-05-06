@@ -20,6 +20,7 @@ import './style/global.less'
 import tool from '@/utils/tool'
 import * as common from '@/utils/common'
 import packageJson from '../package.json'
+import MaCharts from '@/components/ma-charts/index.vue'
 
 const app = createApp(App)
 
@@ -43,6 +44,9 @@ app.config.globalProperties.$tool = tool
 app.config.globalProperties.$common = common
 app.config.globalProperties.$title = import.meta.env.VITE_APP_TITLE
 app.config.globalProperties.$url = import.meta.env.VITE_APP_BASE
+
+// 全局注册组件
+app.component('ma-charts', MaCharts)
 
 app.mount('#app')
 

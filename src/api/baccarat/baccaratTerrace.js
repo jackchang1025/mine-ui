@@ -61,8 +61,7 @@ export default {
   read (id) {
     return request({
       url: 'baccarat/terrace/read/' + id,
-      method: 'get',
-      data
+      method: 'get'
     })
   },
 
@@ -115,5 +114,29 @@ export default {
     })
   },
 
+  /**
+   * 获取牌靴日期列表
+   * @param {Object} params 包含 terrace_id 
+   * @returns {Promise}
+   */
+  getDeckDates (params = {}) {
+    return request({
+      url: 'baccarat/terrace/deck-dates',
+      method: 'get',
+      params
+    })
+  },
 
+  /**
+   * 获取牌靴列表
+   * @param {Object} params 包含 terrace_id 和 date
+   * @returns {Promise}
+   */
+  getDeckList (params = {}) {
+    return request({
+      url: 'baccarat/terrace/deck-list',
+      method: 'get',
+      params
+    })
+  }
 }

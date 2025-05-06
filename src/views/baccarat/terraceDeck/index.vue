@@ -7,9 +7,9 @@
       <template #search-lottery_sequence="{ searchForm, component }">
         <!-- 显示一个输入框组件，并绑定输入框的v-model -->
 
-        <a-select v-model="searchForm[component.dataIndex]" placeholder="lottery_sequence" allow-clear>
-          <a-option v-for="rule in baccaratRuleList" :key="rule.id" :value="rule.rule" >{{ rule.title }}</a-option>
-        </a-select>
+<!--        <a-select v-model="searchForm[component.dataIndex]" placeholder="lottery_sequence" allow-clear>-->
+<!--          <a-option v-for="rule in baccaratRuleList" :key="rule.id" :value="rule.rule" >{{ rule.title }}</a-option>-->
+<!--        </a-select>-->
 
       </template>
 
@@ -20,12 +20,12 @@
       <!--  <a-tag color="blue">{{ record.terrace_id }}</a-tag>-->
       <!--</template>-->
 
-      <template #lottery_sequence="{ record }">
-        <!-- 对标题加上 tag -->
-          <div class="ma-content-block lg:flex justify-between p-4" style="width: 100%; height: 300px;">
-            <ma-scatter :baccaratTerraceDeck="record" :width="'100%'" ></ma-scatter>
-          </div>
-      </template>
+<!--      <template #lottery_sequence="{ record }">-->
+<!--        &lt;!&ndash; 对标题加上 tag &ndash;&gt;-->
+<!--          <div class="ma-content-block lg:flex justify-between p-4" style="width: 100%; height: 300px;">-->
+<!--&lt;!&ndash;            <ma-scatter :baccaratTerraceDeck="record" :width="'100%'" ></ma-scatter>&ndash;&gt;-->
+<!--          </div>-->
+<!--      </template>-->
 
 
       <!--<template #expandRow="record">-->
@@ -163,11 +163,11 @@ const columns = reactive([
 ])
 const baccaratRuleList = ref([]);
 
-baccaratRule.list().then(res => {
-  console.log(res.data)
-
-  baccaratRuleList.value = res?.data;
-})
+// baccaratRule.list().then(res => {
+//   console.log(res.data)
+//
+//   baccaratRuleList.value = res?.data;
+// })
 
 
 </script>

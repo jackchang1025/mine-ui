@@ -114,5 +114,29 @@ export default {
     })
   },
 
+  /**
+   * 获取策略投注日志
+   * @param id 模拟投注ID
+   * @returns {Promise}
+   */
+  getStrategyLogs(id) {
+    return request({
+      url: '/baccarat/simulatedBetting/strategyLogs/' + id,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 重新生成策略统计数据
+   * @param params
+   * @returns {Promise<AxiosResponse<any>>}
+   */
+  regenerateStats(params = {}) {
+    return request({
+      url: '/baccarat/simulatedBetting/regenerateStats',
+      method: 'post',
+      data: params
+    })
+  }
 
 }
